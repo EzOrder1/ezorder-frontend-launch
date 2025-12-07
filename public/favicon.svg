@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#32C766;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#28a854;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <rect width="100" height="100" rx="20" fill="url(#grad)"/>
+  <g fill="white" transform="translate(50, 50)">
+    <!-- Plate/dish circle -->
+    <circle cx="0" cy="5" r="28" fill="none" stroke="white" stroke-width="4"/>
+    <!-- Fork -->
+    <path d="M-12 -20 L-12 -5 M-8 -20 L-8 -5 M-16 -20 L-16 -5 M-12 -5 L-12 15" stroke="white" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <!-- Chat bubble -->
+    <path d="M8 -25 Q25 -25 25 -12 Q25 0 15 0 L12 5 L10 0 Q-5 0 -5 -12 Q-5 -25 8 -25 Z" fill="white"/>
+    <circle cx="5" cy="-12" r="2" fill="#32C766"/>
+    <circle cx="12" cy="-12" r="2" fill="#32C766"/>
+    <circle cx="19" cy="-12" r="2" fill="#32C766"/>
+  </g>
+</svg>
