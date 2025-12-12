@@ -10,6 +10,11 @@ import { TopProducts, ComputedProduct } from "@/components/admin/TopProducts";
 import { MenuItemsTable } from "@/components/admin/menu/MenuItemsTable";
 import { MenuItemForm, MenuItem as FormMenuItem } from "@/components/admin/menu/MenuItemForm";
 import { CategoryManager } from "@/components/admin/menu/CategoryManager";
+import { OrderDetailsModal } from "@/components/admin/orders/OrderDetailsModal";
+import { ActiveOrders } from "@/components/admin/orders/ActiveOrders";
+import { BulkOrderManager } from "@/components/admin/orders/BulkOrderManager";
+import { SalesReport } from "@/components/admin/analytics/SalesReport";
+import { CustomerList } from "@/components/admin/analytics/CustomerList";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,6 +38,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import ringtone from "@/assets/ringtone.mp3";
 
 // Types
 type OrderStatus =
@@ -115,6 +121,53 @@ const AdminDashboard = () => {
   // Menu State
   const [isMenuItemModalOpen, setIsMenuItemModalOpen] = useState(false);
   const [editingMenuItem, setEditingMenuItem] = useState<FormMenuItem | null>(null);
+
+  // Order Detail State
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+
+  // Notification State
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+
+  // Poll for new orders every 30 seconds
+  useQuery({
+    queryKey: ["latest-orders-poll"],
+    queryFn: async () => {
+      // Fetch just the most recent order to check timestamp/id
+      const res = await api.get("/api/v1/orders", { params: { limit: 1 } });
+      const latestOrder = res.data.orders[0] as Order;
+
+      if (latestOrder) {
+        const lastKnownOrder = localStorage.getItem("lastKnownOrderNumber");
+
+        // If we have a last known order and this one is different (and presumably newer)
+        if (lastKnownOrder && lastKnownOrder !== latestOrder.order_number) {
+          // It's a new order!
+          setUnreadNotifications(prev => prev + 1);
+          toast({
+            title: "New Order Received! 🔔",
+            description: `Order #${latestOrder.order_number} from ${latestOrder.user_name}`,
+            duration: 5000,
+            className: "bg-emerald-50 border-emerald-200"
+          });
+
+          // Play Sound
+          try {
+            const audio = new Audio(ringtone);
+            audio.play().catch(e => console.error("Audio play failed", e));
+          } catch (err) {
+            console.error("Failed to initialize audio", err);
+          }
+        }
+
+        // Update local storage to current latest
+        localStorage.setItem("lastKnownOrderNumber", latestOrder.order_number);
+      }
+      return latestOrder;
+    },
+    refetchInterval: 30000, // 30 seconds
+    enabled: authorized,
+  });
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -373,8 +426,18 @@ const AdminDashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="relative"
+              onClick={() => setUnreadNotifications(0)}
+            >
               <Bell className="h-5 w-5 text-muted-foreground" />
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
+                  {unreadNotifications}
+                </span>
+              )}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -448,7 +511,14 @@ const AdminDashboard = () => {
                       </thead>
                       <tbody className="divide-y divide-border">
                         {(ordersQuery.data?.orders || []).map((order) => (
-                          <tr key={order.order_number} className="hover:bg-muted/50">
+                          <tr
+                            key={order.order_number}
+                            className="hover:bg-muted/50 cursor-pointer"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setIsOrderModalOpen(true);
+                            }}
+                          >
                             <td className="px-3 py-3 font-semibold">{order.order_number}</td>
                             <td className="px-3 py-3">
                               <div className="font-medium">{order.user_name}</div>
@@ -459,7 +529,7 @@ const AdminDashboard = () => {
                                 {order.status.replace(/_/g, " ")}
                               </Badge>
                             </td>
-                            <td className="px-3 py-3">
+                            <td className="px-3 py-3" onClick={(e) => e.stopPropagation()}>
                               <Select
                                 value={order.status}
                                 onValueChange={(value: OrderStatus) =>
@@ -485,7 +555,20 @@ const AdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+              <OrderDetailsModal
+                open={isOrderModalOpen}
+                onOpenChange={setIsOrderModalOpen}
+                order={selectedOrder}
+              />
             </div>
+          )}
+          {activeSection === "bulk-update" && (
+            <BulkOrderManager
+              onOrderClick={(order) => {
+                setSelectedOrder(order as any);
+                setIsOrderModalOpen(true);
+              }}
+            />
           )}
 
           {activeSection === "menu-items" && (
@@ -532,7 +615,15 @@ const AdminDashboard = () => {
             </div>
           )}
 
-          {(activeSection !== "dashboard" && activeSection !== "orders" && activeSection !== "menu-items" && activeSection !== "categories") && (
+          {activeSection === "sales-report" && (
+            <SalesReport data={metricsQuery.data?.series || []} />
+          )}
+
+          {activeSection === "customers" && (
+            <CustomerList orders={ordersQuery.data?.orders || []} />
+          )}
+
+          {(activeSection !== "dashboard" && activeSection !== "orders" && activeSection !== "menu-items" && activeSection !== "categories" && activeSection !== "sales-report" && activeSection !== "customers") && (
             <div className="flex h-[50vh] flex-col items-center justify-center text-center">
               <div className="rounded-full bg-gray-100 p-6">
                 <Search className="h-10 w-10 text-gray-400" />

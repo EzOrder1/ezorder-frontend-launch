@@ -26,7 +26,6 @@ const menuItems = [
         category: "Order Management",
         items: [
             { id: "orders", label: "All Orders", icon: ShoppingBag },
-            { id: "active-orders", label: "Active Orders", icon: List },
             { id: "bulk-update", label: "Bulk Update", icon: FileText },
         ],
     },
