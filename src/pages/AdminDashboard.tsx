@@ -395,7 +395,7 @@ const AdminDashboard = () => {
     <div className="flex min-h-screen bg-gray-50/50">
       {/* Sidebar */}
       <div className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 transform bg-white transition-transform duration-300 ease-in-out lg:static lg:translate-x-0",
+        "fixed inset-y-0 left-0 z-50 w-64 transform bg-white transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:overflow-y-auto lg:translate-x-0 lg:border-r",
         isSidebarOpen ? "translate-x-0" : "-translate-x-full"
       )}>
         <AdminSidebar activeSection={activeSection} setActiveSection={(s) => { setActiveSection(s); setIsSidebarOpen(false); }} />
