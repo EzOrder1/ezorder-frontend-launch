@@ -109,11 +109,16 @@ export function Footer() {
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-border pt-8 sm:flex-row">
           <p className="text-sm text-muted-foreground">
-            © {new Date().getFullYear()} EZORDER. All rights reserved.
+            Copyright {new Date().getFullYear()} EZORDER. All rights reserved.
           </p>
-          <p className="text-sm text-muted-foreground">
-            Made with ❤️ for restaurants worldwide
-          </p>
+          <div className="text-center text-sm text-muted-foreground sm:text-right">
+            <p>Powered by Nexus Nao</p>
+            <p>
+              <a className="text-primary hover:underline" href="https://www.nexusnao.com" target="_blank" rel="noreferrer">
+                www.nexusnao.com
+              </a>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { motion } from "framer-motion";
 import { ChefHat, Mail, Lock, Eye, EyeOff } from "lucide-react";
@@ -7,9 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/api";
 
 const AdminLogin = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -37,19 +39,38 @@ const AdminLogin = () => {
     setIsSubmitting(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      // POST /api/auth/login with credentials
-      
+      const response = await api.post("/api/v1/auth/login", {
+        email: formData.email,
+        password: formData.password,
+      });
+
+      const { access_token, user } = response.data;
+
+      // Store token and user data
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("user", JSON.stringify(user));
+
       toast({
         title: "Login Successful",
         description: "Redirecting to dashboard...",
       });
-      
-      // Redirect to dashboard - implement when ready
-    } catch (error) {
+
+      // Determine redirection based on role if needed, or default to dashboard
+      // For now, let's assume there's a dashboard route or simply home
+      // Checking if there is a dashboard route... if not, redirect to index
+      navigate("/admin/dashboard");
+
+    } catch (error: any) {
+      console.error("Login error:", error);
+      let errorMessage = "Invalid email or password.";
+
+      if (error.response?.data?.detail) {
+        errorMessage = error.response.data.detail;
+      }
+
       toast({
         title: "Login Failed",
-        description: "Invalid email or password.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -107,7 +128,7 @@ const AdminLogin = () => {
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={handleChange}
-                      placeholder="••••••••"
+                      placeholder="********"
                       className="pl-10 pr-10"
                       required
                     />
@@ -158,3 +179,4 @@ const AdminLogin = () => {
 };
 
 export default AdminLogin;
+
